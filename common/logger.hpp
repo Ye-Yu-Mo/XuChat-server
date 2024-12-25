@@ -12,7 +12,7 @@
 #pragma once
 #include "../third/Xulog/logs/Xulog.h"
 
-namespace XuChat
+namespace Common
 {
     /**
      * @brief 日志器的智能指针类型

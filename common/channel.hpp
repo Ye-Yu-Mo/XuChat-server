@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "logger.hpp"
-namespace XuChat
+namespace Common
 {
 
     /// @class ServiceChannel

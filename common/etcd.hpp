@@ -6,7 +6,7 @@
 #include <etcd/Value.hpp>
 #include "logger.hpp"
 
-namespace XuChat
+namespace Common
 {
     /// @brief 服务注册客户端类
     class Registry

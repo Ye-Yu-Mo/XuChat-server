@@ -6,7 +6,7 @@
 #include <memory>
 #include "logger.hpp"
 
-namespace XuChat
+namespace Common
 {
     /// @brief ES索引 用于创建索引和字段
     class ESIndex

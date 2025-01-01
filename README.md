@@ -4,7 +4,7 @@ C++23
 
 微服务聊天系统的服务端
 
-## 依赖的库
+## 依赖的库或平台
 
 1. [Xulog](https://github.com/Ye-Yu-Mo/LogSystem) 日志库
 2. [gflags](https://github.com/gflags/gflags) 命令行参数解析框架
@@ -19,4 +19,4 @@ C++23
 11. [hiredis](https://github.com/redis/hiredis) C语言redis客户端
 12. [redis++](https://github.com/sewenew/redis-plus-plus) C++redis客户端 
 13. [odb](https://codesynthesis.com/products/odb/doc/install-build2.xhtml#linux) 内存与数据库映射库
-14. [AMQP-CPP](https://github.com/CopernicaMarketingSoftware/AMQP-CPP) 用于RabbitMQ
+14. [AMQP-CPP](https://github.com/CopernicaMarketingSoftware/AMQP-CPP) 用于RabbitMQ通信

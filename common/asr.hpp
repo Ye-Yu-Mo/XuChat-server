@@ -24,7 +24,7 @@ namespace Common
             return result["result"][0].asString();
         }
 
-    private:
+    private:    
         aip::Speech _client;
     };
 }

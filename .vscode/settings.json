@@ -92,7 +92,8 @@
         "expected": "cpp",
         "ranges": "cpp",
         "regex": "cpp",
-        "any": "cpp"
+        "any": "cpp",
+        "hash_map": "cpp"
     },
     "cSpell.words": [
         "aliyuncs",

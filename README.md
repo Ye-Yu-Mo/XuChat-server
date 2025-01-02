@@ -20,3 +20,4 @@ C++23
 12. [redis++](https://github.com/sewenew/redis-plus-plus) C++redis客户端 
 13. [odb](https://codesynthesis.com/products/odb/doc/install-build2.xhtml#linux) 内存与数据库映射库
 14. [AMQP-CPP](https://github.com/CopernicaMarketingSoftware/AMQP-CPP) 用于RabbitMQ通信
+15. [阿里短信服务平台](https://github.com/aliyun/aliyun-openapi-cpp-sdk.git)

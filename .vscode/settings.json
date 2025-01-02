@@ -95,9 +95,12 @@
         "any": "cpp"
     },
     "cSpell.words": [
+        "aliyuncs",
         "AMQP",
         "DOESNT",
+        "dysmsapi",
         "EVBREAK",
+        "lalibabacloud",
         "lgflags"
     ]
 }

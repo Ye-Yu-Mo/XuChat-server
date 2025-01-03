@@ -1,0 +1,3 @@
+/home/leaf/XuChat-server/speech/build/CMakeFiles/speech_server.dir
+/home/leaf/XuChat-server/speech/build/CMakeFiles/edit_cache.dir
+/home/leaf/XuChat-server/speech/build/CMakeFiles/rebuild_cache.dir

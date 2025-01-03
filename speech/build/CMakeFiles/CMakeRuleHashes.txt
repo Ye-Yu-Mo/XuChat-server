@@ -1,0 +1,2 @@
+# Hashes of file build rules.
+94ad5323648477f787726b4f7911e4a0 /home/leaf/XuChat-server/speech/proto/speech.pb.cc

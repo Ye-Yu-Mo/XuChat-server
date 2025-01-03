@@ -1,0 +1,1 @@
+/usr/bin/c++ -rdynamic CMakeFiles/speech_server.dir/src/speech_server.cc.o CMakeFiles/speech_server.dir/proto/speech.pb.cc.o -o /home/leaf/XuChat-server/speech/bin/speech_server  -lgflags -lbrpc -lssl -lcrypto -lprotobuf -lleveldb -ldl -letcd-cpp-api -lcpprest -lcurl /usr/lib/x86_64-linux-gnu/libjsoncpp.so.25 

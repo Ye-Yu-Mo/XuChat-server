@@ -93,7 +93,8 @@
         "ranges": "cpp",
         "regex": "cpp",
         "any": "cpp",
-        "hash_map": "cpp"
+        "hash_map": "cpp",
+        "coroutine": "cpp"
     },
     "cSpell.words": [
         "aliyuncs",
@@ -103,6 +104,7 @@
         "errmsg",
         "EVBREAK",
         "lalibabacloud",
-        "lgflags"
+        "lgflags",
+        "srcs"
     ]
 }

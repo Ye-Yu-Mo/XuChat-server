@@ -24,6 +24,5 @@ message SpeechRecognitionRsp {
 } 
  
 service SpeechService { 
-    rpc SpeechRecognition(SpeechRecognitionReq) returns 
-(SpeechRecognitionRsp); 
+    rpc SpeechRecognition(SpeechRecognitionReq) returns (SpeechRecognitionRsp); 
 }

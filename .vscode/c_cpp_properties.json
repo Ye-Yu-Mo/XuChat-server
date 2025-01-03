@@ -3,7 +3,9 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/speech/proto",
+                "${workspaceFolder}/third/aip-cpp-sdk"
             ],
             "defines": [],
             "cStandard": "c23",

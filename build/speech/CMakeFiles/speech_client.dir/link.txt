@@ -1,1 +1,0 @@
-/usr/bin/c++ -rdynamic CMakeFiles/speech_client.dir/test/speech_client.cc.o CMakeFiles/speech_client.dir/speech.pb.cc.o -o speech_client  -Wl,-rpath,/usr/local/lib: -lgflags -lfmt -lbrpc -lssl -lcrypto -lprotobuf -lleveldb -letcd-cpp-api -lcpprest -lcurl /usr/local/lib/libjsoncpp.so.19 

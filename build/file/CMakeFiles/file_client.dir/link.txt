@@ -1,1 +1,0 @@
-/usr/bin/c++  -g -rdynamic CMakeFiles/file_client.dir/test/file_client.cc.o CMakeFiles/file_client.dir/file.pb.cc.o CMakeFiles/file_client.dir/base.pb.cc.o -o file_client  -Wl,-rpath,/usr/local/lib: -lgtest -lgflags -lfmt -lbrpc -lssl -lcrypto -lprotobuf -lleveldb -letcd-cpp-api -lcpprest -lcurl /usr/local/lib/libjsoncpp.so.19 

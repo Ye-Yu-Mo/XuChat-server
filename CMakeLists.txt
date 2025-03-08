@@ -1,2 +1,12 @@
 cmake_minimum_required(VERSION 3.1.3)
-project(XuChat)
+project(all-test)
+add_definitions(-DHAVE_ASYNC_MYSQL)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/message)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/user)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/file)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/speech)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/transmite)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/friend)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/gateway)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR})

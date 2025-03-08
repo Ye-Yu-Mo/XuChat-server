@@ -1,288 +1,294 @@
+#pragma once
 #include <elasticlient/client.h>
 #include <cpr/cpr.h>
-#include <glaze/json.hpp>
-#include <ankerl/unordered_dense.h>
+#include <json/json.h>
 #include <iostream>
 #include <memory>
 #include "logger.hpp"
 
-namespace Common
+namespace XuChat
 {
-    /// @brief ES索引 用于创建索引和字段
+    bool Serialize(const Json::Value &val, std::string &dst)
+    {
+        // 先定义Json::StreamWriter 工厂类 Json::StreamWriterBuilder
+        Json::StreamWriterBuilder swb;
+        swb.settings_["emitUTF8"] = true;
+        std::unique_ptr<Json::StreamWriter> sw(swb.newStreamWriter());
+        // 通过Json::StreamWriter中的write接口进行序列化
+        std::stringstream ss;
+        int ret = sw->write(val, &ss);
+        if (ret != 0)
+        {
+            log_error(logger, "JSON序列化失败");
+            return false;
+        }
+        dst = ss.str();
+        return true;
+    }
+    bool UnSerialize(const std::string &src, Json::Value &val)
+    {
+        Json::CharReaderBuilder crb;
+        std::unique_ptr<Json::CharReader> cr(crb.newCharReader());
+        std::string err;
+        bool ret = cr->parse(src.c_str(), src.c_str() + src.size(), &val, &err);
+        if (ret == false)
+        {
+            log_error(logger, "JSON反序列化失败");
+            return false;
+        }
+        return true;
+    }
+
     class ESIndex
     {
     public:
-        using Client = std::shared_ptr<elasticlient::Client>;
-
-        ESIndex(Client client, const std::string &idx_name, const std::string &type = "_doc")
-            : _name(idx_name), _type(type), _client(client)
+        ESIndex(std::shared_ptr<elasticlient::Client> &client,
+                const std::string &name,
+                const std::string &type = "_doc") : _name(name), _type(type), _client(client)
         {
-            _conf.settings.analysis.analyzer.ik.tokenizer = "ik_max_word";
+            Json::Value analysis;
+            Json::Value analyzer;
+            Json::Value ik;
+            Json::Value tokenizer;
+            tokenizer["tokenizer"] = "ik_max_word";
+            ik["ik"] = tokenizer;
+            analyzer["analyzer"] = ik;
+            analysis["analysis"] = analyzer;
+            _index["settings"] = analysis;
         }
-        ESIndex &append(const std::string &key, const std::string &type = "text",
-                        const std::string &analyzer = "ik_max_word", bool enabled = true)
+        ESIndex &append(const std::string &key,
+                        const std::string &type = "text",
+                        const std::string &analyzer = "ik_max_word",
+                        bool enabled = true)
         {
-            _conf.mappings.properties[key] =
-                {.type = type,
-                 .analyzer = analyzer,
-                 .enabled = enabled};
+            Json::Value fields;
+            fields["type"] = type;
+            fields["analyzer"] = analyzer;
+            if (enabled == false)
+                fields["enabled"] = enabled;
+            _properties[key] = fields;
             return *this;
         }
-
-        bool create(const std::string &idx_id = "default_index")
+        bool create(const std::string &index_id = "default_index_id")
         {
-            _conf.mappings.dynamic = true;
-            std::string body{};
-            auto ec = glz::write_json(_conf, body);
-            if (ec)
-                log_error(logger, "索引序列化失败! %s", ec.custom_error_message.data());
-            // info(logger, "请求正文: %s", body.c_str());
+            Json::Value mappings;
+            mappings["dynamic"] = true;
+            mappings["properties"] = _properties;
+            _index["mappings"] = mappings;
+
+            std::string body;
+            bool ret = Serialize(_index, body);
+            if (ret == false)
+            {
+                log_error(logger, "索引序列化失败！");
+                return false;
+            }
+            debug(logger, "%s", body.c_str());
+            // 2. 发起搜索请求
             try
             {
-                auto resp = _client->index(_name, _type, idx_id, body);
-                if (resp.status_code < 200 || resp.status_code >= 300)
+                auto rsp = _client->index(_name, _type, index_id, body);
+                if (rsp.status_code < 200 || rsp.status_code >= 300)
                 {
-                    log_error(logger, "创建ES索引 %s 请求失败! 状态码异常 %ld:%s", _name.c_str(), resp.status_code, resp.error.message.c_str());
+                    log_error(logger, "创建ES索引 %s 失败，响应状态码异常: %d", _name.c_str(), rsp.status_code);
                     return false;
                 }
             }
             catch (std::exception &e)
             {
-                log_error(logger, "创建ES索引 %s 请求失败! %s", _name.c_str(), e.what());
+                log_error(logger, "创建ES索引 %s 失败: %d", _name.c_str(), e.what());
                 return false;
             }
-            debug(logger, "索引创建成功!");
             return true;
         }
-
-        struct Propertie
-        {
-            std::string type;
-            std::string analyzer;
-            bool enabled;
-        };
-
-        struct Mappings
-        {
-            bool dynamic;
-            ankerl::unordered_dense::map<std::string, Propertie> properties;
-        };
-
-        struct Ik
-        {
-            std::string tokenizer;
-        };
-
-        struct Analyzer
-        {
-            Ik ik;
-        };
-
-        struct Analysis
-        {
-            Analyzer analyzer;
-        };
-
-        struct Settings
-        {
-            Analysis analysis;
-        };
-
-        struct Config
-        {
-            Mappings mappings;
-            Settings settings;
-        };
 
     private:
         std::string _name;
         std::string _type;
-        Config _conf;
-        Client _client;
+        Json::Value _properties;
+        Json::Value _index;
+        std::shared_ptr<elasticlient::Client> _client;
     };
 
     class ESInsert
     {
     public:
-        using Client = std::shared_ptr<elasticlient::Client>;
-
-        ESInsert(Client client, const std::string &idx_name, const std::string &type = "_doc")
-            : _name(idx_name), _type(type), _client(client)
+        ESInsert(std::shared_ptr<elasticlient::Client> &client,
+                 const std::string &name,
+                 const std::string &type = "_doc") : _name(name), _type(type), _client(client) {}
+        template <typename T>
+        ESInsert &append(const std::string &key, const T &val)
         {
-        }
-
-        ESInsert &append(const std::string &key, const std::string &value)
-        {
-            _items[key] = value;
+            _item[key] = val;
             return *this;
         }
-
-        bool insert(const std::string &id = "")
+        bool insert(const std::string id = "")
         {
-            std::string body{};
-            auto ec = glz::write_json(_items, body);
-            if (ec)
-                log_error(logger, "新增数据序列化失败! %s", ec.custom_error_message.data());
-            // info(logger, "请求正文: %s", body.c_str());
+            std::string body;
+            bool ret = Serialize(_item, body);
+            if (ret == false)
+            {
+                log_error(logger, "索引序列化失败！");
+                return false;
+            }
+            debug(logger, "%s", body.c_str());
+            // 2. 发起搜索请求
             try
             {
-                auto resp = _client->index(_name, _type, id, body);
-                if (resp.status_code < 200 || resp.status_code >= 300)
+                auto rsp = _client->index(_name, _type, id, body);
+                if (rsp.status_code < 200 || rsp.status_code >= 300)
                 {
-                    log_error(logger, "新增数据 %s 请求失败! 状态码异常 %ld:%s", _name.c_str(), resp.status_code, resp.error.message.c_str());
+                    log_error(logger, "新增数据 %s 失败，响应状态码异常: %d", body.c_str(), rsp.status_code);
                     return false;
                 }
             }
             catch (std::exception &e)
             {
-                log_error(logger, "新增数据 %s 请求失败! %s", _name, e.what());
+                log_error(logger, "新增数据 %s 失败: %s", body.c_str(), e.what());
                 return false;
             }
-            debug(logger, "新增数据成功!");
             return true;
         }
 
     private:
         std::string _name;
         std::string _type;
-        Client _client;
-        ankerl::unordered_dense::map<std::string, std::string> _items;
+        Json::Value _item;
+        std::shared_ptr<elasticlient::Client> _client;
     };
 
     class ESRemove
     {
     public:
-        using Client = std::shared_ptr<elasticlient::Client>;
-
-        ESRemove(Client client, const std::string &idx_name, const std::string &type = "_doc")
-            : _name(idx_name), _type(type), _client(client)
-        {
-        }
-
+        ESRemove(std::shared_ptr<elasticlient::Client> &client,
+                 const std::string &name,
+                 const std::string &type = "_doc") : _name(name), _type(type), _client(client) {}
         bool remove(const std::string &id)
         {
             try
             {
-                auto resp = _client->remove(_name, _type, id);
-                if (resp.status_code < 200 || resp.status_code >= 300)
+                auto rsp = _client->remove(_name, _type, id);
+                if (rsp.status_code < 200 || rsp.status_code >= 300)
                 {
-                    log_error(logger, "删除数据 %s 请求失败! 状态码异常 %ld:%s", _name.c_str(), resp.status_code, resp.error.message.c_str());
+                    log_error(logger, "删除数据 %s 失败，响应状态码异常: %d", id.c_str(), rsp.status_code);
                     return false;
                 }
             }
             catch (std::exception &e)
             {
-                log_error(logger, "删除数据 %s 请求失败! %s", _name, e.what());
+                log_error(logger, "删除数据 %d 失败: %d", id.c_str(), e.what());
                 return false;
             }
-            debug(logger, "删除数据成功!");
             return true;
         }
 
     private:
         std::string _name;
         std::string _type;
-        Client _client;
+        std::shared_ptr<elasticlient::Client> _client;
     };
 
     class ESSearch
     {
     public:
-        using Client = std::shared_ptr<elasticlient::Client>;
+        ESSearch(std::shared_ptr<elasticlient::Client> &client,
+                 const std::string &name,
+                 const std::string &type = "_doc") : _name(name), _type(type), _client(client) {}
+        ESSearch &append_must_not_terms(const std::string &key, const std::vector<std::string> &vals)
+        {
+            Json::Value fields;
+            for (const auto &val : vals)
+            {
+                fields[key].append(val);
+            }
+            Json::Value terms;
+            terms["terms"] = fields;
+            _must_not.append(terms);
+            return *this;
+        }
+        ESSearch &append_should_match(const std::string &key, const std::string &val)
+        {
+            Json::Value field;
+            field[key] = val;
+            Json::Value match;
+            match["match"] = field;
+            _should.append(match);
+            return *this;
+        }
+        ESSearch &append_must_term(const std::string &key, const std::string &val)
+        {
+            Json::Value field;
+            field[key] = val;
+            Json::Value term;
+            term["term"] = field;
+            _must.append(term);
+            return *this;
+        }
+        ESSearch &append_must_match(const std::string &key, const std::string &val)
+        {
+            Json::Value field;
+            field[key] = val;
+            Json::Value match;
+            match["match"] = field;
+            _must.append(match);
+            return *this;
+        }
+        Json::Value search()
+        {
+            Json::Value cond;
+            if (_must_not.empty() == false)
+                cond["must_not"] = _must_not;
+            if (_should.empty() == false)
+                cond["should"] = _should;
+            if (_must.empty() == false)
+                cond["must"] = _must;
+            Json::Value query;
+            query["bool"] = cond;
+            Json::Value root;
+            root["query"] = query;
 
-        ESSearch(Client client, const std::string &idx_name, const std::string &type = "_doc")
-            : _name(idx_name), _type(type), _client(client)
-        {
-            _search.query["bool"] = {};
-        }
-        ESSearch &appendMastNot(const std::string &key, const std::vector<std::string> &values)
-        {
-            Terms t;
-            t.terms[key] = values;
-            _search.query["bool"].must_not.push_back(t);
-            return *this;
-        }
-        ESSearch &appendShouldMatch(const std::string &key, const std::string &value)
-        {
-            Match m;
-            m.match[key] = value;
-            _search.query["bool"].should.push_back(m);
-            return *this;
-        }
-        std::vector<glz::raw_json_view> search()
-        {
             std::string body;
-            auto ec = glz::write_json(_search, body);
-            if (ec)
-                log_error(logger, "检索请求序列化失败! %s", ec.custom_error_message.data());
-
-            cpr::Response resp;
+            bool ret = Serialize(root, body);
+            if (ret == false)
+            {
+                log_error(logger, "索引序列化失败！");
+                return Json::Value();
+            }
+            log_error(logger, "%s", body.c_str());
+            // 2. 发起搜索请求
+            cpr::Response rsp;
             try
             {
-                resp = _client->search(_name, _type, body);
-                if (resp.status_code < 200 || resp.status_code >= 300)
+                rsp = _client->search(_name, _type, body);
+                if (rsp.status_code < 200 || rsp.status_code >= 300)
                 {
-                    log_error(logger, "检索 %s 请求失败! 状态码异常 %ld:%s", _name.c_str(), resp.status_code, resp.error.message.c_str());
-                    log_error(logger, "%s", body.c_str());
-                    return std::vector<glz::raw_json_view>();
+                    log_error(logger, "检索数据 %s 失败，响应状态码异常: %d", body.c_str(), rsp.status_code);
+                    return Json::Value();
                 }
             }
             catch (std::exception &e)
             {
-                log_error(logger, "检索数据 %s 请求失败! %s", _name.c_str(), e.what());
-                return std::vector<glz::raw_json_view>();
+                log_error(logger, "检索数据 %s 失败: %s", body.c_str(), e.what());
+                return Json::Value();
             }
-            Resp s{};
-            auto ec1 = glz::read_json(s, resp.text); // populates s from buffer
-            if (ec1)
+            // 3. 需要对响应正文进行反序列化
+            debug(logger, "检索响应正文: [%s]", rsp.text.c_str());
+            Json::Value json_res;
+            ret = UnSerialize(rsp.text, json_res);
+            if (ret == false)
             {
-                log_error(logger, "检索数据 %s 解析失败! %s", _name.c_str(), "未检索到有效数据");
-                return std::vector<glz::raw_json_view>();
+                log_error(logger, "检索数据 %s 结果反序列化失败", rsp.text.c_str());
+                return Json::Value();
             }
-            debug(logger, "检索数据成功!");
-            return s.hits.hits;
+            return json_res["hits"]["hits"];
         }
-
-        struct Terms
-        {
-            ankerl::unordered_dense::map<std::string, std::vector<std::string>> terms;
-        };
-
-        struct Match
-        {
-            ankerl::unordered_dense::map<std::string, std::string> match;
-        };
-
-        struct Bool
-        {
-            std::vector<Terms> must_not;
-            std::vector<Match> should;
-        };
-
-        struct Search
-        {
-            ankerl::unordered_dense::map<std::string, Bool> query;
-        };
-
-        struct Hits
-        {
-            glz::raw_json_view total;
-            float max_score;
-            std::vector<glz::raw_json_view> hits;
-        };
-
-        struct Resp
-        {
-            int took;
-            bool timed_out;
-            glz::raw_json_view _shards;
-            Hits hits;
-        };
 
     private:
         std::string _name;
         std::string _type;
-        Client _client;
-        Search _search;
+        Json::Value _must_not;
+        Json::Value _should;
+        Json::Value _must;
+        std::shared_ptr<elasticlient::Client> _client;
     };
 }

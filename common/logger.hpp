@@ -10,9 +10,9 @@
  * 该类在全局范围内进行初始化，确保在使用日志功能之前已完成配置。
  */
 #pragma once
-#include "../third/Xulog/logs/Xulog.h"
+#include "../third/include/Xulog/logs/Xulog.h"
 
-namespace Common
+namespace XuChat
 {
     /**
      * @brief 日志器的智能指针类型

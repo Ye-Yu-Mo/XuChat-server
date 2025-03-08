@@ -94,7 +94,10 @@
         "regex": "cpp",
         "any": "cpp",
         "hash_map": "cpp",
-        "coroutine": "cpp"
+        "coroutine": "cpp",
+        "hash_set": "cpp",
+        "unordered_set": "cpp",
+        "forward_list": "cpp"
     },
     "cSpell.words": [
         "aliyuncs",

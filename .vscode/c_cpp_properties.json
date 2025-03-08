@@ -5,6 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/speech/proto",
+                "${workspaceFolder}/file/proto",
                 "${workspaceFolder}/third/aip-cpp-sdk"
             ],
             "defines": [],

@@ -6,7 +6,7 @@
 declare depends
 get_depends() {
     depends=$(ldd $1 | awk '{if (match($3,"/")){print $3}}')
-    #mkdir $2
+    # mkdir $2
     cp -Lr $depends $2
 }
 

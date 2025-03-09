@@ -1,4 +1,9 @@
 third
+build
+example
+conf
+depends
+middle
 
 # Prerequisites
 *.d

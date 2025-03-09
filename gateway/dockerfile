@@ -1,5 +1,5 @@
 # 声明基础镜像来源
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 # 声明工作路径
 WORKDIR /im
 RUN mkdir -p /im/logs &&\

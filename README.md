@@ -21,6 +21,54 @@ C++20
 13. [阿里验证码服务](https://github.com/aliyun/aliyun-openapi-cpp-sdk.git)
 14. [百度语音转文字服务](https://ai.baidu.com/sdk#asr)
 
+## 运行方法
+
+请先查看并修改conf中的密钥配置文件 
+
+### 1. 本机运行
+
+请提前安装好依赖
+
+编译
+```bash
+    mkdir build && cd build
+    cmake ..
+    make
+```
+对应开启build中的子服务即可
+
+### 2. docker
+
+#### docker 打包
+
+在每一个子服务中分别编译形成可以执行文件
+
+```bash
+    cd ./***/
+    mkdir build && cd build
+    cmake ..
+    make
+```
+
+```shell
+./depends.sh
+```
+如果没有输出则说明依赖成功
+
+```shell
+docker compose up
+```
+测试是否能正常启动
+
+#### docker 运行
+
+
+## 解决问题
+
+1. 运行`depends.sh`时提示没有`./****/depends`
+    > 打开`depends.sh` 取消注释 `# mkdir $2`(或者手动创建)<br>
+    > 如果已经存在则需要添加注释
+
 ## TODO
 
 1. 手机号验证码接收平台 从百度换个免费的
